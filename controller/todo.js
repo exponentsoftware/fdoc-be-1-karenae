@@ -40,4 +40,26 @@ const getTodoBy = async (req,res) => {
     }
 }
 
-module.exports = { createTodo, getTodo, getTodoBy }
+const updateTodo = (req,res) => {
+    try{
+        const {todoTitle, todoCompleted, todoCategory} = req.body
+        let todo = await Todo.findByIdAndUpdate({_id:req.params.id},{ todoTitle:todoTitle, todoCompleted:todoCompleted, todoCategory:todoCategory })
+        if (todo === null) res.status(403).json({ status: 'error', message: 'failed to update todo' })
+        else res.status(200).json({ status: 'success', message: 'successfully Updated' })
+    }
+    catch(err){
+        console.log(err)
+    }
+}
+const deleteTodo = (req, res) => {
+    try{
+        let result = await Todo.findOneAndRemove({_id:req.params.id})
+        if (result === null) res.status(403).json({ status: 'error', message: 'failed to delete todo' })
+        else res.status(200).json({ status: 'success', message: 'successfully deleted' })
+    }
+    catch(err) {
+        console.log(err)
+    }
+}
+
+module.exports = { createTodo, getTodo, getTodoBy, updateTodo, deleteTodo }
