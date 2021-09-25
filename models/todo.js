@@ -8,7 +8,7 @@ const todoSchema = new mongoose.Schema({
     todoCompleted:{type: Boolean,default:false},
     todoCategory: {type: [String],required: true, enum: CATEGORY_ENUM, default:'task'}
 },
-{timestamp: true}
+{timestamps: true}
 )
 
 module.exports = mongoose.model('Todo',todoSchema)

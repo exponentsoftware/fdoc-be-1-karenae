@@ -15,13 +15,26 @@ const createTodo = async (req,res)=>{
         console.log(err);
     }
 }
+// Add capability to sort the data by created_at
 
 const getTodo = async (req,res) => {
     try{
-        let todos = await Todo.find({})
-        if(todos.length == 0) return res.json({message:' no todos created'});
-        res.status(200).json({data:todos,metadata:todos.length});
-
+        let titleSearchQuery = req.query.todoTitle
+        let categorySearchQuery = req.query.todoCategory
+        if(titleSearchQuery != undefined) {
+            let todos = await Todo.find({todoTitle:{$regex:`${titleSearchQuery}`,$options:'i'}}).sort({todoCategory:-1})
+            if(todos.length == 0) return res.json({message:' no todos created'});
+            res.status(200).json({data:todos,metadata:todos.length});
+        }else if(categorySearchQuery != undefined){
+            let todos = await Todo.find({todoCategory:{$regex:`${categorySearchQuery}`,$options:'i'}} ).sort({todoCategory:-1})
+            if(todos.length == 0) return res.json({message:' no todos created'});
+            res.status(200).json({data:todos,metadata:todos.length});
+        }
+        else{
+            let todos = await Todo.find()
+            if(todos.length == 0) return res.json({message:' no todos created'});
+            res.status(200).json({data:todos,metadata:todos.length});
+        }
     }
     catch(err){
         console.log(err)
@@ -31,7 +44,7 @@ const getTodo = async (req,res) => {
 const getTodoBy = async (req,res) => {
     try{
         let todo = await Todo.findById({_id:req.params.id})
-        if(todo.length == 0) return res.json({message:' no todos created'});
+        if(todo.length == 0) return res.status(404).json({message:' no todos created'});
         res.status(200).json({data:todo});
 
     }
@@ -40,7 +53,7 @@ const getTodoBy = async (req,res) => {
     }
 }
 
-const updateTodo = (req,res) => {
+const updateTodo = async (req,res) => {
     try{
         const {todoTitle, todoCompleted, todoCategory} = req.body
         let todo = await Todo.findByIdAndUpdate({_id:req.params.id},{ todoTitle:todoTitle, todoCompleted:todoCompleted, todoCategory:todoCategory })
@@ -51,7 +64,7 @@ const updateTodo = (req,res) => {
         console.log(err)
     }
 }
-const deleteTodo = (req, res) => {
+const deleteTodo = async (req, res) => {
     try{
         let result = await Todo.findOneAndRemove({_id:req.params.id})
         if (result === null) res.status(403).json({ status: 'error', message: 'failed to delete todo' })
