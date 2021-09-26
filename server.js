@@ -21,8 +21,10 @@ app.get('/', (req, res) => {
 })
 
 const todoRouter = require('./routes/todo')
+const userRouter = require('./routes/userAuth')
 
 app.use('/api',todoRouter)
+app.use('/api',userRouter)
 
 app.listen(Port,()=>{console.log('listening on 8080')})
 

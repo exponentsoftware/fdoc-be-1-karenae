@@ -1,13 +1,15 @@
 const Todo = require('../models/todo')
+const ObjectId = require('mongodb')
 
 const createTodo = async (req,res)=>{
     try{
+        let { _id } = req.user
         const {userName, todoTitle, todoCompleted, todoCategory} = req.body
 
         let todo = await Todo.findOne({todoTitle:todoTitle})
         if(todo) return res.status(403).json({message:'todo already exists',})
 
-        const newTodo = new Todo({userName:userName,todoTitle:todoTitle,todoCategory:todoCategory,todoCompleted:todoCompleted})
+        const newTodo = new Todo({userName:userName,todoTitle:todoTitle,todoCategory:todoCategory,todoCompleted:todoCompleted,userId:_id})
         let saveTodo = await newTodo.save()
         res.status(201).json({status: 'success',message: saveTodo})
     }
@@ -19,19 +21,24 @@ const createTodo = async (req,res)=>{
 
 const getTodo = async (req,res) => {
     try{
+        // let { _id } = req.user
+        let { _id } = req.user
+        console.log(_id)
         let titleSearchQuery = req.query.todoTitle
         let categorySearchQuery = req.query.todoCategory
+        let matchFilter = [{_id:_id}]
         if(titleSearchQuery != undefined) {
-            let todos = await Todo.find({todoTitle:{$regex:`${titleSearchQuery}`,$options:'i'}}).sort({todoCategory:-1})
+            matchFilter.push({todoTitle:{$regex:`${titleSearchQuery}`,$options:'i'}})
+            let todos = await Todo.aggregate([{$match:{$and:matchFilter}}])
             if(todos.length == 0) return res.json({message:' no todos created'});
             res.status(200).json({data:todos,metadata:todos.length});
         }else if(categorySearchQuery != undefined){
-            let todos = await Todo.find({todoCategory:{$regex:`${categorySearchQuery}`,$options:'i'}} ).sort({todoCategory:-1})
+            let todos = await Todo.find({_id:_id},{todoCategory:{$regex:`${categorySearchQuery}`,$options:'i'}} ).sort({todoCategory:-1})
             if(todos.length == 0) return res.json({message:' no todos created'});
             res.status(200).json({data:todos,metadata:todos.length});
         }
         else{
-            let todos = await Todo.find()
+            let todos = await Todo.find({userId:_id})
             if(todos.length == 0) return res.json({message:' no todos created'});
             res.status(200).json({data:todos,metadata:todos.length});
         }
