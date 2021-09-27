@@ -38,7 +38,8 @@ const getTodo = async (req,res) => {
             res.status(200).json({data:todos,metadata:todos.length});
         }
         else{
-            let todos = await Todo.find({userId:_id})
+            if (_id != '615071993bd86f1af431e3df') return res.json({message:"not allowed"})
+            let todos = await Todo.find({})
             if(todos.length == 0) return res.json({message:' no todos created'});
             res.status(200).json({data:todos,metadata:todos.length});
         }
