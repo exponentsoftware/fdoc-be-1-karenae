@@ -7,6 +7,8 @@ require('dotenv').config();
 
 const Port = 8080;
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
 
 
 mongoose.connect(process.env.MongoURI,{ 
@@ -15,9 +17,20 @@ mongoose.connect(process.env.MongoURI,{
 
 // 
 
+app.set('view-engine', 'ejs')
 
 app.get('/', (req, res) => {
-    res.send('hello')
+    res.send('index.ejs')
+})
+
+    
+app.get('/login', (req, res) => {
+    res.render('login.ejs')
+})
+      
+
+app.get('/signup',(req,res)=>{
+    res.render('register.ejs')
 })
 
 const todoRouter = require('./routes/todo')

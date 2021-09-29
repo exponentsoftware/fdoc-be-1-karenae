@@ -42,6 +42,7 @@ router.post('/signup',(req,res)=>{
 
 router.post('/login',(req,res)=>{
     const {email,password} = req.body
+    console.log(email,password)
     if(!email|| !password){
         return res.status(422).json({error:"please enter a valid email or password"})
     }
@@ -54,7 +55,7 @@ router.post('/login',(req,res)=>{
                 // return res.status(200).json({message:"sucessfully logged in "})
                 const token = jwt.sign({_id: user.id,},"secret",{expiresIn:'1h'});
                 const {_id,userName,email,role,phone} = user;
-                res.json({token,saveduser:{_id,userName,email,role,phone}});
+                res.json({token,saveduser:{_id,userName,email,role,phone}})
             }
             else{
                 return res.status(422).json({message:"invalid email or password"})

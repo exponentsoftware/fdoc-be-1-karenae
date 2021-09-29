@@ -1,5 +1,7 @@
 const Todo = require('../models/todo')
 const ObjectId = require('mongodb')
+const User = require('../models/user.js');
+const moment = require('moment');
 
 const createTodo = async (req,res)=>{
     try{
@@ -19,42 +21,66 @@ const createTodo = async (req,res)=>{
 }
 // Add capability to sort the data by created_at
 
-const getTodo = async (req,res) => {
+const getTodos = async (req,res) => {
     try{
         // let { _id } = req.user
-        let { _id } = req.user
-        console.log(_id)
-        let titleSearchQuery = req.query.todoTitle
-        let categorySearchQuery = req.query.todoCategory
-        let matchFilter = [{_id:_id}]
-        if(titleSearchQuery != undefined) {
-            matchFilter.push({todoTitle:{$regex:`${titleSearchQuery}`,$options:'i'}})
-            let todos = await Todo.aggregate([{$match:{$and:matchFilter}}])
-            if(todos.length == 0) return res.json({message:' no todos created'});
-            res.status(200).json({data:todos,metadata:todos.length});
-        }else if(categorySearchQuery != undefined){
-            let todos = await Todo.find({_id:_id},{todoCategory:{$regex:`${categorySearchQuery}`,$options:'i'}} ).sort({todoCategory:-1})
-            if(todos.length == 0) return res.json({message:' no todos created'});
-            res.status(200).json({data:todos,metadata:todos.length});
-        }
-        else{
-            if (_id != '615071993bd86f1af431e3df') return res.json({message:"not allowed"})
-            let todos = await Todo.find({})
-            if(todos.length == 0) return res.json({message:' no todos created'});
-            res.status(200).json({data:todos,metadata:todos.length});
-        }
+        const { limit, skip, page } = req.pagination
+        let [todos] = await Todo.aggregate([
+            { $match: {$and: matchFilter}},
+            {'$facet': {
+              meta: [ { $count: 'total' }, { $addFields: { page: page } } ],
+              data: [ { $skip: skip }, { $limit: limit } ], 
+            }},
+            { $project:  global.paginationProject },
+        ])
+        if(todos.length == 0) return res.json({message:' no todos created'});
+        res.status(200).json({data:todos,metadata:todos.length});
     }
     catch(err){
         console.log(err)
     }
 }
 
-const getTodoBy = async (req,res) => {
+// for current day
+// for a week
+// for a month
+const getTodo = async (req,res) => {
     try{
-        let todo = await Todo.findById({_id:req.params.id})
-        if(todo.length == 0) return res.status(404).json({message:' no todos created'});
-        res.status(200).json({data:todo});
+        let todo = await Todo.find(
+           {"createdAt": {"$gte": new Date(new Date() - 7 * 60 * 60 * 24 * 1000)}}
+        
+            // { 
+            //     "$match": {
+            //       createdAt: { 
+            //         "$gte": "2021-09-26T13:13:45.571Z",
+            //         //  "$lt": moment().startOf('week').toDate()
+            //       },
+            //     }
+            //   }
+        )
+        console.log(todo)
+        res.status(200).send(todo)
+    }
+    catch(err){
+        console.log(err)
+    }
+}
 
+const getTodobydate = async (req,res) => {
+    try{
+        let todo = await Todo.find(
+            {"createdAt": {"$gte": new Date("2021-09-29")}}
+            // { 
+            //     "$match": {
+            //       createdAt: { 
+            //         "$gte": "2021-09-26T13:13:45.571Z",
+            //         //  "$lt": moment().startOf('week').toDate()
+            //       },
+            //     }
+            //   }
+        )
+        console.log(todo)
+        res.status(200).send(todo)
     }
     catch(err){
         console.log(err)
@@ -83,4 +109,4 @@ const deleteTodo = async (req, res) => {
     }
 }
 
-module.exports = { createTodo, getTodo, getTodoBy, updateTodo, deleteTodo }
+module.exports = { createTodo, getTodo, getTodos, getTodobydate, updateTodo, deleteTodo }
