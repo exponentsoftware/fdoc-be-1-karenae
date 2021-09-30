@@ -35,9 +35,11 @@ app.get('/signup',(req,res)=>{
 
 const todoRouter = require('./routes/todo')
 const userRouter = require('./routes/userAuth')
+const viewRouter = require('./routes/views')
 
 app.use('/api',todoRouter)
 app.use('/api',userRouter)
+app.use('/api',viewRouter)
 
 app.listen(Port,()=>{console.log('listening on 8080')})
 

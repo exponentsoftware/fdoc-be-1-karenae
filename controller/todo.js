@@ -47,7 +47,7 @@ const getTodos = async (req,res) => {
 const getTodo = async (req,res) => {
     try{
         let todo = await Todo.find(
-           {"createdAt": {"$gte": new Date(new Date() - 7 * 60 * 60 * 24 * 1000)}}
+           {"createdAt": {"$gte": new Date(new Date().get - 7 * 60 * 60 * 24 * 1000)}}
         
             // { 
             //     "$match": {
@@ -108,5 +108,34 @@ const deleteTodo = async (req, res) => {
         console.log(err)
     }
 }
+// todoCompleted
+// Create API to get all completed task per Learner
+// const data = await Todo.aggregate([
+//     {$match: {status:"complited"}},
+//     {$group: {_id:"$user",taskCompleted:{$sum:1}}},
+//     {$sort: {taskCompleted: -1}}
+// ]);
 
-module.exports = { createTodo, getTodo, getTodos, getTodobydate, updateTodo, deleteTodo }
+const getCompletedTodo = async (req,res) => {
+    try{
+        let todo = await Todo.aggregate([
+            {
+                $match:{todoCompleted:true}
+            },
+            {
+                $group: {_id:"$userId",todo:{"$push":{"todoTitle":"$todoTitle"}}},
+            
+        },
+        ])
+        // .exec((error,result)=>{
+
+        // })
+        if(todo.length == 0) return res.json({message:' no todo completed'});
+        res.send(todo)
+    }
+    catch(err){
+        console.log(err)
+    }
+}
+
+module.exports = { createTodo, getTodo, getTodos, getTodobydate, getCompletedTodo,updateTodo, deleteTodo }
